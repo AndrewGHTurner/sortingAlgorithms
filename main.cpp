@@ -65,14 +65,14 @@ void colourfulBars(VertexArray *bars, int *NBars)
 }
 
 
-void bubbleSort(VertexArray *bars, int *NBars, RenderWindow& window)
+void bubbleSort(VertexArray *bars, int NBars, RenderWindow& window)
 {
 	bool swap = true;
 	while (swap == true)
 	{
 		swap = false;
 		int barsChecked = 0;//may need fiddleing
-		while (barsChecked < *NBars - 1)
+		while (barsChecked < NBars - 1)
 		{
 			//if bar1 > bar2
 			if ((*bars)[(barsChecked * 4) + 0].position.y > (*bars)[(barsChecked * 4) + 4].position.y)
@@ -192,47 +192,57 @@ int main()
 	RenderWindow window(VideoMode(screenWidth, screenHight), "SFML works!");
 	
 	int NBars = 1000;
-
-	vector <int> hights(NBars);
-	populateHightVector(&hights);
-
+	int NBarsRecorded = NBars;
 	VertexArray bars(Quads, 4);
 	bars.resize(NBars * 4);
-	populateBarsVector(&bars, &NBars, &hights);
 	cout << "Enter '1' for bubblesort\nEnter '2' for quicksort" << endl;
-	string sortType;
-	cin >> sortType;
-	if (sortType == "1")
-	{
-		bubbleSort(&bars, &NBars, window);
-	}
-	else if (sortType == "2")
-	{
-		quickSort(&bars, 0, (NBars - 1), window);
-	}
-	
-	cout << "SORTED!!!" << endl;
-	cout << "With " << swaps << " swaps";
-	//The speed here is deterined by how often render() is called not by the algorithm
+
 	while (window.isOpen())
 	{
+		bool fade = false;
+		vector <int> hights(NBars);
+		populateHightVector(&hights);
 		Event event;
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
 				window.close();
+			else if (event.type == Event::KeyReleased)
+			{
+				if (event.key.code == Keyboard::Num1)
+				{
+					populateBarsVector(&bars, &NBars, &hights);
+					bubbleSort(&bars, NBars, window);
+				}
+				else if (event.key.code == Keyboard::Num2)
+				{
+					populateBarsVector(&bars, &NBars, &hights);
+					quickSort(&bars, 0, (NBars - 1), window);
+				}
+				fade = true;
+				cout << "SORTED!!!" << endl;
+				cout << "With " << swaps << " swaps" << endl;
+				swaps = 0;
+			}
 		}
-		
-		//quickSort(&bars, 0, ((NBars - 1) * 4), window);// THIS IS CALLED MULTIPLE TIMES SO ONLY APPEARS TO WORK
-		if (NBars > 0)
+		//The speed here is deterined by how often render() is called not by the algorithm
+		while (fade == true)
 		{
-			colourfulBars(&bars, &NBars);
+			if (NBars > 0)
+			{
+				colourfulBars(&bars, &NBars);
+			}
+			if (colouredBars.size() > 0)
+			{
+				fadeColour(&colouredBars);
+			}
+			else 
+			{
+				NBars = NBarsRecorded;
+				fade = false;
+			}
+			render(window, &bars);
 		}
-		if (colouredBars.size() > 0)
-		{
-			fadeColour(&colouredBars);
-		}
-		render(window, &bars);
 	}
 
 	return 0;
